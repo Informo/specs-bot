@@ -29,20 +29,13 @@ func NewCli(
 	return
 }
 
-// SendNotice generates a notice message from the SCS data and then sends the
-// said message as a notice to the configured Matrix room.
+// SendNoticeWithTypeAndState generates a notice message from the SCS data and
+// then sends the said message as a notice to the configured Matrix room.
 // Returns an error if the message could not be generated or if the notice could
 // not be sent to the Matrix room.
 // Returns and do nothing if there's no message string available for the SCS's
 // SCSP state.
-func (c *Cli) SendNotice(data types.SCSData) (err error) {
-	// Load the template defined in the configuration file. The "message" name
-	// used here is not important.
-	tmpl, err := template.New("message").Parse(c.cfg.Notices.Pattern)
-	if err != nil {
-		return
-	}
-
+func (c *Cli) SendNoticeWithTypeAndState(data types.SCSData) (err error) {
 	// Check if there's a message string available for the given SCS type and
 	// SCSP state.
 	var ok bool
@@ -57,6 +50,37 @@ func (c *Cli) SendNotice(data types.SCSData) (err error) {
 		if !ok {
 			return
 		}
+	}
+
+	return c.sendNotice(data)
+}
+
+func (c *Cli) SendNoticeWithUnsplitLabels(
+	data types.SCSData, unsplitLabels []string,
+) (err error) {
+	var ok bool
+	for _, l := range unsplitLabels {
+		if len(data.Message) > 0 && _, ok = c.cfg.Notices.Strings["global"][l]; ok {
+			return
+		}
+
+		data.Message, ok = c.cfg.Notices.Strings["global"][l]
+
+		// If no string could be found, return and do nothing.
+		if !ok {
+			return
+		}
+	}
+
+	return c.sendNotice(data)
+}
+
+func (c *Cli) sendNotice(data types.SCSData) (err error) {
+	// Load the template defined in the configuration file. The "message" name
+	// used here is not important.
+	tmpl, err := template.New("message").Parse(c.cfg.Notices.Pattern)
+	if err != nil {
+		return
 	}
 
 	// Generate the notice message from the configured template and the SCS's

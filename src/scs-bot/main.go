@@ -44,7 +44,7 @@ func main() {
 	http.HandleFunc(cfg.Webhook.Path, func(w http.ResponseWriter, r *http.Request) {
 		var payload interface{}
 		// Retrieve the payload if the event is a pull request event.
-		payload, err = h.Parse(r, github.PullRequestEvent)
+		payload, err = h.Parse(r, github.PullRequestEvent, github.IssuesEvent)
 		if err != nil {
 			// If the event isn't a pull request event, notify the sender that
 			// the request isn't within what's expected and return.
@@ -58,10 +58,20 @@ func main() {
 			return
 		}
 
-		// Handle the payload.
-		if err = hook.HandlePullRequestPayload(
-			payload.(github.PullRequestPayload), cli,
-		); err != nil {
+		switch payload.(type) {
+		case github.PullRequestPayload:
+			err = hook.HandlePullRequestPayload(
+				payload.(github.PullRequestPayload), cli,
+			)
+			break
+		case github.IssuesPayload:
+			err = hook.HandleIssuesPayload(
+				payload.(github.IssuesPayload), cli,
+			)
+			break
+		}
+
+		if err != nil {
 			fmt.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
