@@ -1,0 +1,15 @@
+{
+	"global": {
+		"merged":      "has been accepted and merged"
+	},
+	"typo": {
+		"pending":     "is pending for a review from an Informo core team member",
+		"review":      "is being reviewed by an Informo core team member",
+		"won't merge": "has been refused by its reviewer"
+	},
+	"behaviour": {
+		"review":       "is now open to public review for the next 14 days",
+		"final review": "is being reviewed by an Informo core team member",
+		"won't merge":  "has been refused by an Informo core team member"
+	}
+}

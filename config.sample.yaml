@@ -1,0 +1,35 @@
+# Settings to connect to the bot's Matrix account.
+matrix:
+  # URL of the Matrix homeserver the bot's account is registered on.
+  hs_url: "https://matrix.example.com"
+  # Matrix ID of the bot's account.
+  mxid: "@specs-bot:example.com"
+  # Valid access token for the bot's account.
+  access_token: "ACCESS_TOKEN"
+
+# Settings for setting up the GitHub webhook.
+webhook:
+  # HTTP path to setup the webhook on.
+  path: "/webhook-path"
+  # Webhook's secret.
+  secret: "SECRET"
+  # Address the HTTP server listens on. Must be formatted like either
+  # "0.0.0.0:8080" or ":8080".
+  listen_addr: "127.0.0.1:8080"
+
+# Settings for formatting and sending notices to the Matrix room.
+notices:
+  # JSON file containing the strings to use according to SCS's state. An
+  # example is available in the "strings.json" file.
+  strings_file: "./strings.json"
+  # Go pattern to use while formatting the notice message.
+  # Available placeholders:
+  #   * {{ .Number }}     The SCS's issue/pull request number.
+  #   * {{ .Title }}      The SCS's title.
+  #   * {{ .Message }}    The message found in the JSON strings file for the
+  #                       SCS's state.
+  #   * {{ .URL }}        The SCS's issue/pull request URL.
+  # More information on Go patterns can be found at https://godoc.org/text/template
+  pattern: "SCS #{{ .Number }} \"{{ .Title }}\" {{ .Message }}: {{ .URL }}"
+  # The ID of the Matrix room to send notices to.
+  room: "!someid:example.com"
