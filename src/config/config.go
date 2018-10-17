@@ -32,9 +32,9 @@ type WebhookConfig struct {
 // also contains a map of strings that will be filled from the strings JSON
 // file.
 type NoticesConfig struct {
-	Pattern         string `yaml:"pattern"`
-	Room            string `yaml:"room"`
-	StringsFilePath string `yaml:"strings_file"`
+	Pattern         string   `yaml:"pattern"`
+	Rooms           []string `yaml:"rooms"`
+	StringsFilePath string   `yaml:"strings_file"`
 	Strings         map[string]map[string]string
 }
 

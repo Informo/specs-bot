@@ -15,7 +15,7 @@ import (
 // nothing. If the action is "labeled", it loads the data of the SCS from the
 // PR's data, and iterates through the PR's labels to get its type and SCSP
 // state. If one of these two isn't defined, it does nothing more and returns.
-// If both are filled, it sends a notice through the Matrix room. If the notice
+// If both are filled, it sends a notice through the Matrix rooms. If the notice
 // send fails, it returns with an error.
 // If there's more than one SCS type and/or more than one SCSP state for a SCS,
 // it returns and do nothing.
@@ -64,7 +64,7 @@ func HandlePullRequestPayload(
 			return
 		}
 
-		// Emit a notice to the configured Matrix room.
+		// Emit a notice to the configured Matrix rooms.
 		err = cli.SendNotice(data)
 	}
 

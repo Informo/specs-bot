@@ -1,6 +1,7 @@
 package matrix
 
 import (
+	"fmt"
 	"strings"
 	"text/template"
 
@@ -30,9 +31,9 @@ func NewCli(
 }
 
 // SendNotice generates a notice message from the SCS data and then sends the
-// said message as a notice to the configured Matrix room.
+// said message as a notice to the configured Matrix rooms.
 // Returns an error if the message could not be generated or if the notice could
-// not be sent to the Matrix room.
+// not be sent to the Matrix rooms.
 // Returns and do nothing if there's no message string available for the SCS's
 // SCSP state.
 func (c *Cli) SendNotice(data types.SCSData) (err error) {
@@ -66,8 +67,16 @@ func (c *Cli) SendNotice(data types.SCSData) (err error) {
 		return
 	}
 
-	// Send a notice to the Matrix room with the notice message.
-	_, err = c.c.SendNotice(c.cfg.Notices.Room, b.String())
+	// Send a notice to the Matrix rooms with the notice message.
+	for _, room := range c.cfg.Notices.Rooms {
+		_, err = c.c.SendNotice(room, b.String())
+
+		// If there is an error for one specific room, display the error and continue
+		// looping
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 
 	return
 }
