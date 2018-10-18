@@ -32,4 +32,4 @@ notices:
   # More information on Go patterns can be found at https://godoc.org/text/template
   pattern: "SCS #{{ .Number }} \"{{ .Title }}\" {{ .Message }}: {{ .URL }}"
   # The ID of the Matrix rooms to send notices to.
-  Rooms: ["!someid:example.com"]
+  rooms: ["!someid:example.com"]
