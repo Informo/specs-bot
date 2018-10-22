@@ -60,7 +60,7 @@ func (c *Cli) SendNoticeWithUnsplitLabels(
 ) (err error) {
 	var ok bool
 	for _, l := range unsplitLabels {
-		if len(data.Message) > 0 && _, ok = c.cfg.Notices.Strings["global"][l]; ok {
+		if _, ok = c.cfg.Notices.Strings["global"][l]; ok && len(data.Message) > 0 {
 			return
 		}
 

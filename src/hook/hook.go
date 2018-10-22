@@ -31,7 +31,7 @@ func HandlePullRequestPayload(
 			labels = append(labels, l.Name)
 		}
 
-		err = handleSubmission(pr.Number, pr.Title, pr.HTMLURL, labels)
+		err = handleSubmission(pr.Number, pr.Title, pr.HTMLURL, labels, cli)
 	}
 
 	return
@@ -49,14 +49,16 @@ func HandleIssuesPayload(
 			labels = append(labels, l.Name)
 		}
 
-		err = handleSubmission(issue.Number, issue.Title, issue.HTMLURL, labels)
+		err = handleSubmission(
+			issue.Number, issue.Title, issue.HTMLURL, labels, cli,
+		)
 	}
 
 	return
 }
 
 func handleSubmission(
-	number int64, title string, url string, labels []string,
+	number int64, title string, url string, labels []string, cli *matrix.Cli,
 ) (err error) {
 	data := types.SCSData{
 		Number: number,
