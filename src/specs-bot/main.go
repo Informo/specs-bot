@@ -21,6 +21,9 @@ func main() {
 	// Parse the command line flags.
 	flag.Parse()
 
+	// Configure logrus.
+	logConfig()
+
 	// Load the configuration.
 	cfg, err := config.Load(*configFile)
 	if err != nil {

@@ -13,7 +13,7 @@ func (f utcFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return f.Formatter.Format(entry)
 }
 
-func logConfig() error {
+func logConfig() {
 	if *debug {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
@@ -27,6 +27,4 @@ func logConfig() error {
 			DisableSorting:   false,
 		},
 	})
-
-	return nil
 }
