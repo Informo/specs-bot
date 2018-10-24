@@ -1,7 +1,6 @@
 package matrix
 
 import (
-	"fmt"
 	"strings"
 	"text/template"
 
@@ -9,6 +8,7 @@ import (
 	"types"
 
 	"github.com/matrix-org/gomatrix"
+	"github.com/sirupsen/logrus"
 )
 
 // Cli is a representation of a Matrix client, containing both the gomatrix
@@ -37,11 +37,20 @@ func NewCli(
 // Returns and do nothing if there's no message string available for the SCS's
 // SCSP state.
 func (c *Cli) SendNoticeWithTypeAndState(data types.SCSData) (err error) {
+	logDebugEntry := logrus.WithFields(logrus.Fields{
+		"number": data.Number,
+		"title":  data.Title,
+		"url":    data.URL,
+		"type":   data.Type,
+		"state":  data.State,
+	})
+
 	// Check if there's a message string available for the given SCS type and
 	// SCSP state.
 	var ok bool
 	data.Message, ok = c.cfg.Notices.Strings[data.Type][data.State]
 	if !ok {
+		logDebugEntry.Debug("Could not find a type-specific message string, searching into global message strings")
 		// If a message string could not be found for the given SCS type and
 		// SCSP state, check if there's a type-independant message string for
 		// this SCSP state.
@@ -49,8 +58,13 @@ func (c *Cli) SendNoticeWithTypeAndState(data types.SCSData) (err error) {
 
 		// If no string could be found, return and do nothing.
 		if !ok {
+			logDebugEntry.Debug("Could not find a global message string for the given state")
 			return
 		}
+
+		logDebugEntry.Debug("Got a global message string")
+	} else {
+		logDebugEntry.Debug("Got a type-specific message string")
 	}
 
 	return c.sendNotice(data)
@@ -67,20 +81,30 @@ func (c *Cli) SendNoticeWithTypeAndState(data types.SCSData) (err error) {
 func (c *Cli) SendNoticeWithUnsplitLabels(
 	data types.SCSData, unsplitLabels []string,
 ) (err error) {
+	logDebugEntry := logrus.WithFields(logrus.Fields{
+		"number": data.Number,
+		"title":  data.Title,
+		"url":    data.URL,
+		"labels": unsplitLabels,
+	})
+
 	var ok bool
 	var match string
 	for _, l := range unsplitLabels {
 		// If we have another match when there's already a message loaded in,
 		// we don't know what message to use. In this case, don't do anything.
 		if match, ok = c.cfg.Notices.Strings["global"][l]; ok && len(data.Message) > 0 {
+			logDebugEntry.WithField("name", l).Debug("Found another message string for label name, aborting")
 			return
 		}
 
 		data.Message = match
+		logDebugEntry.WithField("name", l).Debug("Found a message string for label name")
 	}
 
 	// No message could be found for any of the labels.
 	if len(data.Message) == 0 {
+		logDebugEntry.Debug("Could not find a message for any label name")
 		return
 	}
 
@@ -94,10 +118,20 @@ func (c *Cli) SendNoticeWithUnsplitLabels(
 // from the configured template, or sending it out as a notice to the Matrix
 // room.
 func (c *Cli) sendNotice(data types.SCSData) (err error) {
+	logEntry := logrus.WithFields(logrus.Fields{
+		"number":  data.Number,
+		"title":   data.Title,
+		"url":     data.URL,
+		"message": data.Message,
+		"type":    data.Type,
+		"state":   data.State,
+	})
+
 	// Load the template defined in the configuration file. The "message" name
 	// used here is not important.
 	tmpl, err := template.New("message").Parse(c.cfg.Notices.Pattern)
 	if err != nil {
+		logEntry.Debug("Could not load template")
 		return
 	}
 
@@ -105,6 +139,7 @@ func (c *Cli) sendNotice(data types.SCSData) (err error) {
 	// data.
 	var b strings.Builder
 	if err = tmpl.Execute(&b, data); err != nil {
+		logEntry.Debug("Could not build notice message from template")
 		return
 	}
 
@@ -116,9 +151,11 @@ func (c *Cli) sendNotice(data types.SCSData) (err error) {
 		// display the error without breaking from the loop in order to send the
 		// notice to as much rooms possible.
 		if err != nil {
-			fmt.Println(err)
+			logEntry.Error(err)
 		}
 	}
+
+	logEntry.Debug("Notice sent")
 
 	return
 }

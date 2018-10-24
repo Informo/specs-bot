@@ -6,6 +6,7 @@ import (
 	"matrix"
 	"types"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/go-playground/webhooks.v5/github"
 )
 
@@ -23,7 +24,9 @@ import (
 func HandlePullRequestPayload(
 	pl github.PullRequestPayload, cli *matrix.Cli,
 ) (err error) {
-	// Only process the "labeled" action.
+	logrus.WithField("action", pl.Action).Debug("Got PR event payload")
+
+	// Only process the label-related action.
 	if pl.Action == "labeled" || pl.Action == "unlabeled" {
 		pr := pl.PullRequest
 
@@ -53,6 +56,8 @@ func HandlePullRequestPayload(
 func HandleIssuesPayload(
 	pl github.IssuesPayload, cli *matrix.Cli,
 ) (err error) {
+	logrus.WithField("action", pl.Action).Debug("Got issue event payload")
+
 	// Only process the label-related actions.
 	if pl.Action == "labeled" || pl.Action == "unlabeled" {
 		issue := pl.Issue
@@ -85,6 +90,15 @@ func HandleIssuesPayload(
 func handleSubmission(
 	number int64, title string, url string, labels []string, cli *matrix.Cli,
 ) (err error) {
+	logDebugEntry := logrus.WithFields(logrus.Fields{
+		"number": number,
+		"title":  title,
+		"url":    url,
+		"labels": labels,
+	})
+
+	logDebugEntry.Debug("Handling submission")
+
 	data := types.SCSData{
 		Number: number,
 		Title:  title,
@@ -105,6 +119,7 @@ func handleSubmission(
 		// and skip to the next iteration (as there's not enough data to
 		// determine a specific type or state from this label name).
 		if len(split) < 2 {
+			logDebugEntry.WithField("name", l).Debug("Label name couldn't be split")
 			unsplittableLabels = append(unsplittableLabels, l)
 			continue
 		}
@@ -118,24 +133,37 @@ func handleSubmission(
 		case "type":
 			// If more than one type is defined, return and do nothing.
 			if len(data.Type) > 0 {
+				logDebugEntry.WithField("type", split[1]).Debug("Got another type, aborting")
 				return
 			}
 			data.Type = split[1]
+			logDebugEntry.WithField("type", data.Type).Debug("Got the submission type")
 		case "scsp":
 			// If more than one SCSP state is defined, return and do noting.
 			if len(data.State) > 0 {
+				logDebugEntry.WithField("state", split[1]).Debug("Got another state, aborting")
 				return
 			}
 			data.State = split[1]
+			logDebugEntry.WithField("state", data.State).Debug("Got the SCSP state")
 		default:
 			// If the first element in the split doesn't follow the Informo
 			// SCSP, it means we should process this label name with the generic
 			// workflow if we can (i.e. if a type or state can't be extracted
 			// from other label names).
+			logDebugEntry.WithField("name", l).Debug("Label name could be split but doesn't implement the SCSP")
 			unsplittableLabels = append(unsplittableLabels, l)
 			break
 		}
 	}
+
+	// Redefine the log entry's fields to append the type and state now that we
+	// have both of them in their definite state (i.e. their finite value or we
+	// know one or more haven't been provided).
+	logDebugEntry = logDebugEntry.WithFields(logrus.Fields{
+		"type":  data.Type,
+		"state": data.State,
+	})
 
 	// If the submission's type or SCSP state couldn't be determined from the
 	// label names, it can either mean that the submission doesn't implement the
@@ -145,10 +173,12 @@ func handleSubmission(
 	// accordingly with the Informo SCSP and for which a message string has been
 	// defined.
 	if len(data.Type) == 0 || len(data.State) == 0 {
+		logDebugEntry.Debug("Calling the generic workflow")
 		return cli.SendNoticeWithUnsplitLabels(data, unsplittableLabels)
 	}
 
 	// At this point we're pretty sure the submission implements Informo's SCSP,
 	// so we use the dedicated workflow.
+	logDebugEntry.Debug("Calling the Informo SCSP dedicated workflow")
 	return cli.SendNoticeWithTypeAndState(data)
 }
