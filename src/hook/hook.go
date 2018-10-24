@@ -14,7 +14,7 @@ import (
 // (i.e. "(un)labeled"), it extracts the PR's labels' names and calls
 // handleSubmission with the list of names and some specific data regarding the
 // PR, which will then process the extracted data and trigger the generation
-// and sending of a notice to the Matrix room.
+// and sending of a notice to the Matrix rooms.
 // Returns and do nothing if the event's action isn't related to labels, or if
 // handleSubmission (or subsequent function calls) decided there was no need to
 // send a notice out.
@@ -44,7 +44,7 @@ func HandlePullRequestPayload(
 // "(un)labeled"), it extracts the issue's labels' names and calls
 // handleSubmission with the list of names and some specific data regarding the
 // issue, which will then process the extracted data and trigger the generation
-// and sending of a notice to the Matrix room.
+// and sending of a notice to the Matrix rooms.
 // Returns and do nothing if the event's action isn't related to labels, or if
 // handleSubmission (or subsequent function calls) decided there was no need to
 // send a notice out.

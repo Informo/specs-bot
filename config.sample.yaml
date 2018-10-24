@@ -17,7 +17,7 @@ webhook:
   # "0.0.0.0:8080" or ":8080".
   listen_addr: "127.0.0.1:8080"
 
-# Settings for formatting and sending notices to the Matrix room.
+# Settings for formatting and sending notices to the Matrix rooms.
 notices:
   # JSON file containing the strings to use according to SCS's state. An
   # example is available in the "strings.json" file.
@@ -31,5 +31,5 @@ notices:
   #   * {{ .URL }}        The SCS's issue/pull request URL.
   # More information on Go patterns can be found at https://godoc.org/text/template
   pattern: "SCS #{{ .Number }} \"{{ .Title }}\" {{ .Message }}: {{ .URL }}"
-  # The ID of the Matrix room to send notices to.
-  room: "!someid:example.com"
+  # IDs of the Matrix rooms to send notices to.
+  rooms: ["!someid:example.com"]
