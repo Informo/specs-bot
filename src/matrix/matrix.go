@@ -55,26 +55,43 @@ func (c *Cli) SendNoticeWithTypeAndState(data types.SCSData) (err error) {
 	return c.sendNotice(data)
 }
 
+// SendNoticeWithUnsplitLabels generates a notice message from the pull
+// request's or issue's labels that couldn't be split accordingly with Informo's
+// SCSP. It then sends the message to the configured Matrix room. It is meant to
+// be used as a fallback if either the type or the state couldn't be determined
+// (i.e. if the proposal doesn't implement Informo's SCSP).
+// Returns with an error if the notice message could not be generated or sent.
+// Returns and do nothing if there's no message string matching any of the given
+// labels, or if there was more than one match.
 func (c *Cli) SendNoticeWithUnsplitLabels(
 	data types.SCSData, unsplitLabels []string,
 ) (err error) {
 	var ok bool
+	var match string
 	for _, l := range unsplitLabels {
-		if _, ok = c.cfg.Notices.Strings["global"][l]; ok && len(data.Message) > 0 {
+		// If we have another match when there's already a message loaded in,
+		// we don't know what message to use. In this case, don't do anything.
+		if match, ok = c.cfg.Notices.Strings["global"][l]; ok && len(data.Message) > 0 {
 			return
 		}
 
-		data.Message, ok = c.cfg.Notices.Strings["global"][l]
+		data.Message = match
+	}
 
-		// If no string could be found, return and do nothing.
-		if !ok {
-			return
-		}
+	// No message could be found for any of the labels.
+	if len(data.Message) == 0 {
+		return
 	}
 
 	return c.sendNotice(data)
 }
 
+// sendNotice uses the given data to generate the full notice message for this
+// submission update from the configured template, and send it to the Matrix
+// room.
+// Returns with an error it there was an issue generating the notice message
+// from the configured template, or sending it out as a notice to the Matrix
+// room.
 func (c *Cli) sendNotice(data types.SCSData) (err error) {
 	// Load the template defined in the configuration file. The "message" name
 	// used here is not important.

@@ -58,6 +58,7 @@ func main() {
 			return
 		}
 
+		// Handle both issues and pull requests payloads.
 		switch payload.(type) {
 		case github.PullRequestPayload:
 			err = hook.HandlePullRequestPayload(
@@ -71,6 +72,8 @@ func main() {
 			break
 		}
 
+		// If any of the handler or workflow returned with an error, log it and
+		// tell the user something went wrong.
 		if err != nil {
 			fmt.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
