@@ -14,8 +14,9 @@ import (
 // Cli is a representation of a Matrix client, containing both the gomatrix
 // client and the configuration.
 type Cli struct {
-	c   *gomatrix.Client
-	cfg *config.Config
+	c        *gomatrix.Client
+	cfg      *config.Config
+	prevMsgs map[int64]string
 }
 
 // NewCli creates and returns an instance of the Cli structure from the Matrix
@@ -27,6 +28,7 @@ func NewCli(
 	cli = new(Cli)
 	cli.cfg = cfg
 	cli.c, err = gomatrix.NewClient(hsURL, mxid, accessToken)
+	cli.prevMsgs = make(map[int64]string)
 	return
 }
 
@@ -114,6 +116,8 @@ func (c *Cli) SendNoticeWithUnsplitLabels(
 // sendNotice uses the given data to generate the full notice message for this
 // submission update from the configured template, and send it to the Matrix
 // rooms.
+// Returns and do nothing if the latest message sent for this submission is the
+// same as the message for this update.
 // Returns with an error it there was an issue generating the notice message
 // from the configured template, or sending it out as a notice to the Matrix
 // room.
@@ -126,6 +130,11 @@ func (c *Cli) sendNotice(data types.SCSData) (err error) {
 		"type":    data.Type,
 		"state":   data.State,
 	})
+
+	if msg, ok := c.prevMsgs[data.Number]; ok && strings.Compare(msg, data.Message) == 0 {
+		logEntry.Debug("Already sent this update for this submission")
+		return
+	}
 
 	// Load the template defined in the configuration file. The "message" name
 	// used here is not important.
@@ -154,6 +163,8 @@ func (c *Cli) sendNotice(data types.SCSData) (err error) {
 			logEntry.Error(err)
 		}
 	}
+
+	c.prevMsgs[data.Number] = data.Message
 
 	logEntry.Debug("Notice sent")
 
