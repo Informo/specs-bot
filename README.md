@@ -6,6 +6,8 @@ It works by setting up a GitHub webhook listening on pull requests and issues ev
 
 ## Build
 
+You can install the bot by building it or using one of the binaries available in the project's [releases](https://github.com/Informo/specs-bot/releases).
+
 This project is written in Go, therefore building it requires a [Go development environment](https://golang.org/doc/install).
 
 Building it also requires [gb](https://github.com/constabulary/gb):
