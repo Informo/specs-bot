@@ -136,6 +136,8 @@ func (c *Cli) sendNotice(data types.SCSData) (err error) {
 		return
 	}
 
+	c.prevMsgs[data.Number] = data.Message
+
 	// Load the template defined in the configuration file. The "message" name
 	// used here is not important.
 	tmpl, err := template.New("message").Parse(c.cfg.Notices.Pattern)
@@ -163,8 +165,6 @@ func (c *Cli) sendNotice(data types.SCSData) (err error) {
 			logEntry.Error(err)
 		}
 	}
-
-	c.prevMsgs[data.Number] = data.Message
 
 	logEntry.Debug("Notice sent")
 
