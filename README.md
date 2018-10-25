@@ -23,7 +23,7 @@ gb vendor restore
 gb build
 ```
 
-The bot's binary should now be available as `bin/specs-bot`
+The bot's binary should now be available as `bin/specs-bot`. You can run it as it is, or with the `--debug` flag to make it print debug logs, which explain the whole path of a payload's content through the different workflows.
 
 ## Configure
 
