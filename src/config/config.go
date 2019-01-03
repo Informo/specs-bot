@@ -81,6 +81,7 @@ func Load(filePath string) (cfg *Config, err error) {
 		return
 	}
 
+	// Check if the configured database driver is supported.
 	if _, supported := supportedDBDrivers[cfg.Database.Driver]; !supported {
 		err = ErrUnsupportedDBDriver
 		return
