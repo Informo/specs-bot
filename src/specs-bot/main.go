@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"config"
+	"database"
 	"hook"
 	"matrix"
 
@@ -40,6 +41,12 @@ func main() {
 	}
 	logrus.Debug("Matrix client instantiated")
 
+	// Instantiate the database and prepare statements.
+	db, err := database.NewDatabase(cfg)
+	if err != nil {
+		logrus.Panic(err)
+	}
+
 	// Instantiate a GitHub webhook.
 	h, err := github.New(github.Options.Secret(cfg.Webhook.Secret))
 	if err != nil {
@@ -69,12 +76,12 @@ func main() {
 		switch payload.(type) {
 		case github.PullRequestPayload:
 			err = hook.HandlePullRequestPayload(
-				payload.(github.PullRequestPayload), cli,
+				payload.(github.PullRequestPayload), cli, db,
 			)
 			break
 		case github.IssuesPayload:
 			err = hook.HandleIssuesPayload(
-				payload.(github.IssuesPayload), cli,
+				payload.(github.IssuesPayload), cli, db,
 			)
 			break
 		}
