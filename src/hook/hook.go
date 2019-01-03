@@ -35,6 +35,7 @@ func HandlePullRequestPayload(
 		// Lock the mutex for this proposal in order to make sure it doesn't get
 		// updated by another event before we're done with this one.
 		mutex.Lock(pr.Number)
+		logrus.WithField("number", pr.Number).Debug("Locked mutex")
 
 		// Retrieve the proposal's state.
 		state, err := getState(db, pr.Number)
@@ -85,6 +86,7 @@ func HandleIssuesPayload(
 		// Lock the mutex for this proposal in order to make sure it doesn't get
 		// updated by another event before we're done with this one.
 		mutex.Lock(issue.Number)
+		logrus.WithField("number", issue.Number).Debug("Locked mutex")
 
 		// Retrieve the proposal's state.
 		state, err := getState(db, issue.Number)
@@ -221,6 +223,9 @@ func handleSubmission(
 	return cli.SendNoticeWithTypeAndState(data)
 }
 
+// getState retrieves the state of a given proposal from the database and
+// converts it into a map.
+// Returns an error if the database driver returns one.
 func getState(db *database.Database, number int64) (map[string]bool, error) {
 	// Retrieve the proposal's state.
 	state, err := db.GetProposalState(number)
@@ -238,7 +243,10 @@ func getState(db *database.Database, number int64) (map[string]bool, error) {
 	return stateMap, nil
 }
 
+// unlockAndReturnErr unlocks the mutex for a given proposal and returns with a
+// given error.
 func unlockAndReturnErr(number int64, err error) error {
 	mutex.Unlock(number)
+	logrus.WithField("number", number).Debug("Unlocked mutex")
 	return err
 }
