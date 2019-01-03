@@ -10,13 +10,13 @@ import (
 
 var supportedDBDrivers = map[string]bool{
 	"postgres": true,
-	"sqlite":   true,
+	"sqlite3":  true,
 }
 
 var (
 	// ErrUnsupportedDBDriver is returned if the driver name in the configuration
 	// file doesn't refer to a supported database driver.
-	ErrUnsupportedDBDriver = fmt.Errorf("Unsupported database driver, only \"postgres\" and \"sqlite\" are supported")
+	ErrUnsupportedDBDriver = fmt.Errorf("Unsupported database driver, only \"postgres\" and \"sqlite3\" are supported")
 )
 
 // Config represents the top-level structure of the configuration file.
