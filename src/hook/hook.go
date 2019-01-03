@@ -54,6 +54,7 @@ func HandlePullRequestPayload(
 			return unlockAndReturnErr(pr.Number, err)
 		}
 
+		// Update the proposal's state in the database.
 		err = db.UpdateProposalState(pr.Number, labels)
 		return unlockAndReturnErr(pr.Number, err)
 	}
@@ -105,6 +106,7 @@ func HandleIssuesPayload(
 			return unlockAndReturnErr(issue.Number, err)
 		}
 
+		// Update the proposal's state in the database.
 		err = db.UpdateProposalState(issue.Number, labels)
 		return unlockAndReturnErr(issue.Number, err)
 	}
@@ -135,7 +137,7 @@ func handleSubmission(
 
 	logDebugEntry.Debug("Handling submission")
 
-	data := types.SCSData{
+	data := &types.SCSData{
 		Number: number,
 		Title:  title,
 		URL:    url,

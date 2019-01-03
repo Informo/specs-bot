@@ -38,7 +38,7 @@ func NewCli(
 // not be sent to the Matrix rooms.
 // Returns and do nothing if there's no message string available for the SCS's
 // SCSP state.
-func (c *Cli) SendNoticeWithTypeAndState(data types.SCSData) (err error) {
+func (c *Cli) SendNoticeWithTypeAndState(data *types.SCSData) (err error) {
 	logDebugEntry := logrus.WithFields(logrus.Fields{
 		"number": data.Number,
 		"title":  data.Title,
@@ -81,7 +81,7 @@ func (c *Cli) SendNoticeWithTypeAndState(data types.SCSData) (err error) {
 // Returns and do nothing if there's no message string matching any of the given
 // labels, or if there was more than one match.
 func (c *Cli) SendNoticeWithUnsplitLabels(
-	data types.SCSData, unsplitLabels []string,
+	data *types.SCSData, unsplitLabels []string,
 ) (err error) {
 	logDebugEntry := logrus.WithFields(logrus.Fields{
 		"number": data.Number,
@@ -89,6 +89,8 @@ func (c *Cli) SendNoticeWithUnsplitLabels(
 		"url":    data.URL,
 		"labels": unsplitLabels,
 	})
+
+	messages := make([]string, 0)
 
 	var ok bool
 	var match string
@@ -98,19 +100,33 @@ func (c *Cli) SendNoticeWithUnsplitLabels(
 		if match, ok = c.cfg.Notices.Strings["global"][l]; ok && len(data.Message) > 0 {
 			logDebugEntry.WithField("name", l).Debug("Found another message string for label name, aborting")
 			return
+		} else if ok {
+			messages = append(messages, match)
+			logDebugEntry.WithField("name", l).Debug("Found a message string for label name")
 		}
-
-		data.Message = match
-		logDebugEntry.WithField("name", l).Debug("Found a message string for label name")
 	}
 
-	// No message could be found for any of the labels.
-	if len(data.Message) == 0 {
+	switch len(messages) {
+	case 0:
+		// No message could be found for any of the labels.
 		logDebugEntry.Debug("Could not find a message for any label name")
 		return
+	case 1:
+		// Only 1 message has been found, we don't need to do any copy.
+		data.Message = messages[0]
+		return c.sendNotice(data)
+	default:
+		// More than 1 message has been found found, we copy the structure as much
+		// as necessary with the different messages then send them.
+		var msg string
+		for _, msg = range messages {
+			if err = c.sendNotice(data.CopyWithMsg(msg)); err != nil {
+				return
+			}
+		}
 	}
 
-	return c.sendNotice(data)
+	return nil
 }
 
 // sendNotice uses the given data to generate the full notice message for this
@@ -121,7 +137,7 @@ func (c *Cli) SendNoticeWithUnsplitLabels(
 // Returns with an error it there was an issue generating the notice message
 // from the configured template, or sending it out as a notice to the Matrix
 // room.
-func (c *Cli) sendNotice(data types.SCSData) (err error) {
+func (c *Cli) sendNotice(data *types.SCSData) (err error) {
 	logEntry := logrus.WithFields(logrus.Fields{
 		"number":  data.Number,
 		"title":   data.Title,
