@@ -47,7 +47,7 @@ func HandlePullRequestPayload(
 		labels := make([]string, 0)
 		newState := make([]string, 0)
 		for _, l := range pr.Labels {
-			newState = append(labels, l.Name)
+			newState = append(newState, l.Name)
 			if _, exists := state[l.Name]; !exists {
 				labels = append(labels, l.Name)
 			}
@@ -100,7 +100,7 @@ func HandleIssuesPayload(
 		labels := make([]string, 0)
 		newState := make([]string, 0)
 		for _, l := range issue.Labels {
-			newState = append(labels, l.Name)
+			newState = append(newState, l.Name)
 			if _, exists := state[l.Name]; !exists {
 				labels = append(labels, l.Name)
 			}
