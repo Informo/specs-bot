@@ -33,3 +33,12 @@ notices:
   pattern: "SCS #{{ .Number }} \"{{ .Title }}\" {{ .Message }}: {{ .URL }}"
   # IDs of the Matrix rooms to send notices to.
   rooms: ["!someid:example.com"]
+
+# Settings for connecting to the database.
+database:
+  # Database driver. Can be either "postgres" or "sqlite3".
+  driver: sqlite3
+  # Data source, which is the connection string for postgres or the database's
+  # location for sqlite3.
+  # Examples for postgres (look for "connStr"): https://godoc.org/github.com/lib/pq
+  data_source: ./specs-bot.db

@@ -10,3 +10,19 @@ type SCSData struct {
 	Message string
 	URL     string
 }
+
+// CopyWithMsg returns a new instance of SCSData with the given string as its
+// Message field.
+func (d *SCSData) CopyWithMsg(msg string) *SCSData {
+	newData := new(SCSData)
+
+	newData.Number = d.Number
+	newData.Title = d.Title
+	newData.Type = d.Type
+	newData.State = d.State
+	newData.URL = d.URL
+
+	newData.Message = msg
+
+	return newData
+}

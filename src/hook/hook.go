@@ -3,7 +3,9 @@ package hook
 import (
 	"strings"
 
+	"database"
 	"matrix"
+	"mutex"
 	"types"
 
 	"github.com/sirupsen/logrus"
@@ -22,24 +24,45 @@ import (
 // Returns with an error if handleSubmission or any subsequent function call
 // returned with an error.
 func HandlePullRequestPayload(
-	pl github.PullRequestPayload, cli *matrix.Cli,
-) (err error) {
+	pl github.PullRequestPayload, cli *matrix.Cli, db *database.Database,
+) error {
 	logrus.WithField("action", pl.Action).Debug("Got PR event payload")
 
 	// Only process the label-related action.
 	if pl.Action == "labeled" || pl.Action == "unlabeled" {
 		pr := pl.PullRequest
 
-		// Retrieve the labels' names.
-		labels := []string{}
-		for _, l := range pr.Labels {
-			labels = append(labels, l.Name)
+		// Lock the mutex for this proposal in order to make sure it doesn't get
+		// updated by another event before we're done with this one.
+		mutex.Lock(pr.Number)
+		logrus.WithField("number", pr.Number).Debug("Locked mutex")
+
+		// Retrieve the proposal's state.
+		state, err := getState(db, pr.Number)
+		if err != nil {
+			return unlockAndReturnErr(pr.Number, err)
 		}
 
-		err = handleSubmission(pr.Number, pr.Title, pr.HTMLURL, labels, cli)
+		// Retrieve the labels' names.
+		labels := make([]string, 0)
+		newState := make([]string, 0)
+		for _, l := range pr.Labels {
+			newState = append(newState, l.Name)
+			if _, exists := state[l.Name]; !exists {
+				labels = append(labels, l.Name)
+			}
+		}
+
+		if err = handleSubmission(pr.Number, pr.Title, pr.HTMLURL, labels, cli); err != nil {
+			return unlockAndReturnErr(pr.Number, err)
+		}
+
+		// Update the proposal's state in the database.
+		err = db.UpdateProposalState(pr.Number, newState)
+		return unlockAndReturnErr(pr.Number, err)
 	}
 
-	return
+	return nil
 }
 
 // HandleIssuesPayload processes the payload of an issue event received by the
@@ -54,26 +77,47 @@ func HandlePullRequestPayload(
 // Returns with an error if handleSubmission or any subsequent function call
 // returned with an error.
 func HandleIssuesPayload(
-	pl github.IssuesPayload, cli *matrix.Cli,
-) (err error) {
+	pl github.IssuesPayload, cli *matrix.Cli, db *database.Database,
+) error {
 	logrus.WithField("action", pl.Action).Debug("Got issue event payload")
 
 	// Only process the label-related actions.
 	if pl.Action == "labeled" || pl.Action == "unlabeled" {
 		issue := pl.Issue
 
-		// Retrieve the labels' names.
-		labels := []string{}
-		for _, l := range issue.Labels {
-			labels = append(labels, l.Name)
+		// Lock the mutex for this proposal in order to make sure it doesn't get
+		// updated by another event before we're done with this one.
+		mutex.Lock(issue.Number)
+		logrus.WithField("number", issue.Number).Debug("Locked mutex")
+
+		// Retrieve the proposal's state.
+		state, err := getState(db, issue.Number)
+		if err != nil {
+			return unlockAndReturnErr(issue.Number, err)
 		}
 
-		err = handleSubmission(
+		// Retrieve the labels' names.
+		labels := make([]string, 0)
+		newState := make([]string, 0)
+		for _, l := range issue.Labels {
+			newState = append(newState, l.Name)
+			if _, exists := state[l.Name]; !exists {
+				labels = append(labels, l.Name)
+			}
+		}
+
+		if err = handleSubmission(
 			issue.Number, issue.Title, issue.HTMLURL, labels, cli,
-		)
+		); err != nil {
+			return unlockAndReturnErr(issue.Number, err)
+		}
+
+		// Update the proposal's state in the database.
+		err = db.UpdateProposalState(issue.Number, newState)
+		return unlockAndReturnErr(issue.Number, err)
 	}
 
-	return
+	return nil
 }
 
 // handleSubmission uses the given data referring to a submission to decide
@@ -99,7 +143,7 @@ func handleSubmission(
 
 	logDebugEntry.Debug("Handling submission")
 
-	data := types.SCSData{
+	data := &types.SCSData{
 		Number: number,
 		Title:  title,
 		URL:    url,
@@ -181,4 +225,32 @@ func handleSubmission(
 	// so we use the dedicated workflow.
 	logDebugEntry.Debug("Calling the Informo SCSP dedicated workflow")
 	return cli.SendNoticeWithTypeAndState(data)
+}
+
+// getState retrieves the state of a given proposal from the database and
+// converts it into a map.
+// Returns an error if the database driver returns one.
+func getState(db *database.Database, number int64) (map[string]bool, error) {
+	// Retrieve the proposal's state.
+	state, err := db.GetProposalState(number)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert the state slice into a map so it's easier to process further down
+	// the workflow.
+	stateMap := make(map[string]bool)
+	for _, label := range state {
+		stateMap[label] = true
+	}
+
+	return stateMap, nil
+}
+
+// unlockAndReturnErr unlocks the mutex for a given proposal and returns with a
+// given error.
+func unlockAndReturnErr(number int64, err error) error {
+	mutex.Unlock(number)
+	logrus.WithField("number", number).Debug("Unlocked mutex")
+	return err
 }

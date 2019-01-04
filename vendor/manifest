@@ -22,9 +22,21 @@
 			"path": "/query"
 		},
 		{
+			"importpath": "github.com/lib/pq",
+			"repository": "https://github.com/lib/pq",
+			"revision": "9eb73efc1fcc404148b56765b0d3f61d9a5ef8ee",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/matrix-org/gomatrix",
 			"repository": "https://github.com/matrix-org/gomatrix",
 			"revision": "eb6a57bae949723df0d4947a03d4136a1f64b784",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/mattn/go-sqlite3",
+			"repository": "https://github.com/mattn/go-sqlite3",
+			"revision": "87ac1cb49789a0ef6b0d7be6b7aa458a9b90d7ae",
 			"branch": "master"
 		},
 		{
