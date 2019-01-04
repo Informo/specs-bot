@@ -46,6 +46,7 @@ func main() {
 	if err != nil {
 		logrus.Panic(err)
 	}
+	logrus.Debug("Database instantiated")
 
 	// Instantiate a GitHub webhook.
 	h, err := github.New(github.Options.Secret(cfg.Webhook.Secret))
