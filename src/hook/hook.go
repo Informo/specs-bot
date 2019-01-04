@@ -44,8 +44,10 @@ func HandlePullRequestPayload(
 		}
 
 		// Retrieve the labels' names.
-		labels := []string{}
+		labels := make([]string, 0)
+		newState := make([]string, 0)
 		for _, l := range pr.Labels {
+			newState = append(labels, l.Name)
 			if _, exists := state[l.Name]; !exists {
 				labels = append(labels, l.Name)
 			}
@@ -56,7 +58,7 @@ func HandlePullRequestPayload(
 		}
 
 		// Update the proposal's state in the database.
-		err = db.UpdateProposalState(pr.Number, labels)
+		err = db.UpdateProposalState(pr.Number, newState)
 		return unlockAndReturnErr(pr.Number, err)
 	}
 
@@ -95,8 +97,10 @@ func HandleIssuesPayload(
 		}
 
 		// Retrieve the labels' names.
-		labels := []string{}
+		labels := make([]string, 0)
+		newState := make([]string, 0)
 		for _, l := range issue.Labels {
+			newState = append(labels, l.Name)
 			if _, exists := state[l.Name]; !exists {
 				labels = append(labels, l.Name)
 			}
@@ -109,7 +113,7 @@ func HandleIssuesPayload(
 		}
 
 		// Update the proposal's state in the database.
-		err = db.UpdateProposalState(issue.Number, labels)
+		err = db.UpdateProposalState(issue.Number, newState)
 		return unlockAndReturnErr(issue.Number, err)
 	}
 
