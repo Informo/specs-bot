@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS proposal_state (
 	-- Numeric identifier of the proposal, i.e. the issue/PR's numeric ID
 	number INTEGER PRIMARY KEY,
 	-- Comma-separated list of labels, in the latest state of the proposal we know about.
-	labels TEXT NOT NULL,
+	labels TEXT NOT NULL
 );
 `
 
