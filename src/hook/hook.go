@@ -25,7 +25,7 @@ import (
 // returned with an error.
 func HandlePullRequestPayload(
 	pl github.PullRequestPayload, cli *matrix.Cli, db *database.Database,
-) error {
+) (err error) {
 	logrus.WithField("action", pl.Action).Debug("Got PR event payload")
 
 	// Only process the label-related action.
@@ -37,28 +37,13 @@ func HandlePullRequestPayload(
 		mutex.Lock(pr.Number)
 		logrus.WithField("number", pr.Number).Debug("Locked mutex")
 
-		// Retrieve the proposal's state.
-		state, err := getState(db, pr.Number)
-		if err != nil {
-			return unlockAndReturnErr(pr.Number, err)
-		}
-
 		// Retrieve the labels' names.
 		labels := make([]string, 0)
-		newState := make([]string, 0)
 		for _, l := range pr.Labels {
-			newState = append(newState, l.Name)
-			if _, exists := state[l.Name]; !exists {
-				labels = append(labels, l.Name)
-			}
+			labels = append(labels, l.Name)
 		}
 
-		if err = handleSubmission(pr.Number, pr.Title, pr.HTMLURL, labels, cli); err != nil {
-			return unlockAndReturnErr(pr.Number, err)
-		}
-
-		// Update the proposal's state in the database.
-		err = db.UpdateProposalState(pr.Number, newState)
+		err = handleSubmission(pr.Number, pr.Title, pr.HTMLURL, labels, cli, db)
 		return unlockAndReturnErr(pr.Number, err)
 	}
 
@@ -78,7 +63,7 @@ func HandlePullRequestPayload(
 // returned with an error.
 func HandleIssuesPayload(
 	pl github.IssuesPayload, cli *matrix.Cli, db *database.Database,
-) error {
+) (err error) {
 	logrus.WithField("action", pl.Action).Debug("Got issue event payload")
 
 	// Only process the label-related actions.
@@ -90,30 +75,15 @@ func HandleIssuesPayload(
 		mutex.Lock(issue.Number)
 		logrus.WithField("number", issue.Number).Debug("Locked mutex")
 
-		// Retrieve the proposal's state.
-		state, err := getState(db, issue.Number)
-		if err != nil {
-			return unlockAndReturnErr(issue.Number, err)
-		}
-
 		// Retrieve the labels' names.
 		labels := make([]string, 0)
-		newState := make([]string, 0)
 		for _, l := range issue.Labels {
-			newState = append(newState, l.Name)
-			if _, exists := state[l.Name]; !exists {
-				labels = append(labels, l.Name)
-			}
+			labels = append(labels, l.Name)
 		}
 
-		if err = handleSubmission(
-			issue.Number, issue.Title, issue.HTMLURL, labels, cli,
-		); err != nil {
-			return unlockAndReturnErr(issue.Number, err)
-		}
-
-		// Update the proposal's state in the database.
-		err = db.UpdateProposalState(issue.Number, newState)
+		err = handleSubmission(
+			issue.Number, issue.Title, issue.HTMLURL, labels, cli, db,
+		)
 		return unlockAndReturnErr(issue.Number, err)
 	}
 
@@ -133,6 +103,7 @@ func HandleIssuesPayload(
 // one returns with an error.
 func handleSubmission(
 	number int64, title string, url string, labels []string, cli *matrix.Cli,
+	db *database.Database,
 ) (err error) {
 	logDebugEntry := logrus.WithFields(logrus.Fields{
 		"number": number,
@@ -209,6 +180,13 @@ func handleSubmission(
 		"state": data.State,
 	})
 
+	if len(data.Type) != 0 && len(data.State) != 0 {
+		// At this point we're pretty sure the submission implements Informo's SCSP,
+		// so we use the dedicated workflow.
+		logDebugEntry.Debug("Calling the Informo SCSP dedicated workflow")
+		return cli.SendNoticeWithTypeAndState(data)
+	}
+
 	// If the submission's type or SCSP state couldn't be determined from the
 	// label names, it can either mean that the submission doesn't implement the
 	// Informo SCSP, or a list of labels implementing it will come in a future
@@ -216,15 +194,34 @@ func handleSubmission(
 	// generic workflow that only processes labels that couldn't be split
 	// accordingly with the Informo SCSP and for which a message string has been
 	// defined.
-	if len(data.Type) == 0 || len(data.State) == 0 {
-		logDebugEntry.Debug("Calling the generic workflow")
-		return cli.SendNoticeWithUnsplitLabels(data, unsplittableLabels)
+	// For this workflow we will need to process the proposal's state and filter
+	// out labels that were already in it before the event happened.
+
+	// Retrieve the proposal's state.
+	state, err := getState(db, number)
+	if err != nil {
+		return
 	}
 
-	// At this point we're pretty sure the submission implements Informo's SCSP,
-	// so we use the dedicated workflow.
-	logDebugEntry.Debug("Calling the Informo SCSP dedicated workflow")
-	return cli.SendNoticeWithTypeAndState(data)
+	// Filter the unsplittable labels so we're only left with the ones we didn't
+	// previously have.
+	filteredLabels := make([]string, 0)
+	for _, l := range unsplittableLabels {
+		if _, exists := state[l]; !exists {
+			filteredLabels = append(filteredLabels, l)
+		}
+	}
+
+	// Use the generic workflow with the filtered set of labels
+	logDebugEntry.Debug("Calling the generic workflow")
+	if err = cli.SendNoticeWithUnsplitLabels(data, filteredLabels); err != nil {
+		return
+	}
+
+	// Save the new proposal's state.
+	// We could have done that earlier, but should the notice sending fail we'd
+	// want the next event to be processed with the previous state.
+	return db.UpdateProposalState(number, labels)
 }
 
 // getState retrieves the state of a given proposal from the database and
