@@ -84,20 +84,22 @@ Triggers the sending of this notice to Matrix:
 
 ## Scripts
 
-This release includes a python3 script called `fill-db.py` in the `scripts/` directory. Its purpose is to initially seed a database with proposals and their labels. The reason for it is that specs-bot only tracks changes between labels, and thus if a proposal is already halfway through completion when specs-bot is activated, it will end up outputting multiple events as it finds out about all the labels that were already on the issue prior to specs-bot coming online.
+### DB Label Seeder
+
+This release includes a python3 script called `fill-db.py` in the `scripts/fill-db` directory. Its purpose is to initially seed a database with proposals and their labels. The reason for it is that specs-bot only tracks changes between labels, and thus if a proposal is already halfway through completion when specs-bot is activated, it will end up outputting multiple events as it finds out about all the labels that were already on the issue prior to specs-bot coming online.
 
 The script fixes this issue by initially downloading all information about all issues/PRs (or other those with certain labels) and their label information, so that specs-bot can be up-to-date about the repo's proposals as soon as it comes online.
 
 To use, make sure you have python3 and pip installed, then install the script's python requirements:
 
 ```
-pip3 install -r scripts/requirements.txt
+pip3 install -r scripts/fill-db/requirements.txt
 ```
 
-Then, open `scripts/fill-db.py` and enter in your repository information (ex: `"Informo/specs"`), your Github [personal access token](https://github.com/settings/tokens) and the labels you'd like to filter issues/PRs by as a list of strings (or leave as an empty list to download all issues/PRs). Once done, simply run the script from this repo's root directory:
+Then, open `scripts/fill-db/fill-db.py` and enter in your repository information (ex: `"Informo/specs"`), your Github [personal access token](https://github.com/settings/tokens) and the labels you'd like to filter issues/PRs by as a list of strings (or leave as an empty list to download all issues/PRs). Once done, simply run the script from this repo's root directory:
 
 ```
-python3 scripts/fill-db.py
+python3 scripts/fill-db/fill-db.py
 ```
 
 Your sqlite3 DB file should now be seeded with all proposals and their label information. You can now start specs-bot and be confident it'll show changes as intended.
