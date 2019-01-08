@@ -84,7 +84,7 @@ Triggers the sending of this notice to Matrix:
 
 ## Scripts
 
-### DB Label Seeder
+### DB Label Seeder (Sqlite3 only)
 
 This release includes a python3 script called `fill-db.py` in the `scripts/fill-db` directory. Its purpose is to initially seed a database with proposals and their labels. The reason for it is that specs-bot only tracks changes between labels, and thus if a proposal is already halfway through completion when specs-bot is activated, it will end up outputting multiple events as it finds out about all the labels that were already on the issue prior to specs-bot coming online.
 
