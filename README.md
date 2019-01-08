@@ -96,7 +96,7 @@ To use, make sure you have python3 and pip installed, then install the script's 
 pip3 install -r scripts/fill-db/requirements.txt
 ```
 
-Then, open `scripts/fill-db/fill-db.py` and enter in your repository information (ex: `"Informo/specs"`), your Github [personal access token](https://github.com/settings/tokens) and the labels you'd like to filter issues/PRs by as a list of strings (or leave as an empty list to download all issues/PRs). Once done, simply run the script from this repo's root directory:
+Then, open `scripts/fill-db/fill-db.py` and enter in your repository information (ex: `"Informo/specs"`), your Github [personal access token](https://github.com/settings/tokens), your sqlite3 DB location (ex: `"./specs-bot.db"`) and the labels you'd like to filter issues/PRs by as a list of strings (or leave as an empty list to download all issues/PRs). Once done, simply run the script from this repo's root directory:
 
 ```
 python3 scripts/fill-db/fill-db.py
