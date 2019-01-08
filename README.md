@@ -29,7 +29,7 @@ The bot's binary should now be available as `bin/specs-bot`. You can run it as i
 
 ## Configure
 
-The bot needs two configuration file to do its job.
+The bot needs two configuration files to do its job.
 
 ### `config.yaml`
 
