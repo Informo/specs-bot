@@ -88,7 +88,13 @@ This release includes a python3 script called `fill-db.py` in the `scripts/` dir
 
 The script fixes this issue by initially downloading all information about all issues/PRs (or other those with certain labels) and their label information, so that specs-bot can be up-to-date about the repo's proposals as soon as it comes online.
 
-To use, first open `scripts/fill-db.py` and enter in your repository information (ex: `"Informo/specs"`), your Github [personal access token](https://github.com/settings/tokens) and the labels you'd like to filter issues/PRs by as a list of strings (or leave as an empty list to download all issues/PRs). Once done, simply run the script from this repo's root directory:
+To use, make sure you have python3 and pip installed, then install the script's python requirements:
+
+```
+pip3 install -r scripts/requirements.txt
+```
+
+Then, open `scripts/fill-db.py` and enter in your repository information (ex: `"Informo/specs"`), your Github [personal access token](https://github.com/settings/tokens) and the labels you'd like to filter issues/PRs by as a list of strings (or leave as an empty list to download all issues/PRs). Once done, simply run the script from this repo's root directory:
 
 ```
 python3 scripts/fill-db.py
