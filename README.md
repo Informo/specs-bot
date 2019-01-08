@@ -82,6 +82,28 @@ Triggers the sending of this notice to Matrix:
 
 ![matrix](https://user-images.githubusercontent.com/34184120/47514484-68291c80-d878-11e8-9b21-11e1da5c7ebb.png)
 
+## Scripts
+
+### DB Label Seeder (Sqlite3 only)
+
+This release includes a python3 script called `fill-db.py` in the `scripts/fill-db` directory. Its purpose is to initially seed a database with proposals and their labels. The reason for it is that specs-bot only tracks changes between labels, and thus if a proposal is already halfway through completion when specs-bot is activated, it will end up outputting multiple events as it finds out about all the labels that were already on the issue prior to specs-bot coming online.
+
+The script fixes this issue by initially downloading all information about all issues/PRs (or other those with certain labels) and their label information, so that specs-bot can be up-to-date about the repo's proposals as soon as it comes online.
+
+To use, make sure you have python3 and pip installed, then install the script's python requirements:
+
+```
+pip3 install -r scripts/fill-db/requirements.txt
+```
+
+Then, open `scripts/fill-db/fill-db.py` and enter in your repository information (ex: `"Informo/specs"`), your Github [personal access token](https://github.com/settings/tokens), your sqlite3 DB location (ex: `"./specs-bot.db"`) and the labels you'd like to filter issues/PRs by as a list of strings (or leave as an empty list to download all issues/PRs). Once done, simply run the script from this repo's root directory:
+
+```
+python3 scripts/fill-db/fill-db.py
+```
+
+Your sqlite3 DB file should now be seeded with all proposals and their label information. You can now start specs-bot and be confident it'll show changes as intended.
+
 ## What is Informo?
 
 Informo is an open project using decentralisation and federation to fight online censorship of the press. Read more about it [here](https://specs.informo.network/informo/), and join the discussion online on [Matrix](https://matrix.to/#/#discuss:weu.informo.network) or [IRC](https://webchat.freenode.net/?channels=%23informo).
