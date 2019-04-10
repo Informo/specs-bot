@@ -32,6 +32,7 @@ func Lock(number int64) {
 func Unlock(number int64) {
 	// Avoid multiple goroutines using the map at the same time.
 	mapMutex.Lock()
+	defer mapMutex.Unlock()
+
 	mutexes[number].Unlock()
-	mapMutex.Unlock()
 }
