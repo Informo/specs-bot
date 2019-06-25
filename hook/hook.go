@@ -3,10 +3,10 @@ package hook
 import (
 	"strings"
 
-	"database"
-	"matrix"
-	"mutex"
-	"types"
+	"github.com/Informo/specs-bot/database"
+	"github.com/Informo/specs-bot/matrix"
+	"github.com/Informo/specs-bot/mutex"
+	"github.com/Informo/specs-bot/types"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/go-playground/webhooks.v5/github"

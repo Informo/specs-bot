@@ -4,8 +4,8 @@ import (
 	"strings"
 	"text/template"
 
-	"config"
-	"types"
+	"github.com/Informo/specs-bot/config"
+	"github.com/Informo/specs-bot/types"
 
 	"github.com/matrix-org/gomatrix"
 	"github.com/sirupsen/logrus"

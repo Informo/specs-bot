@@ -1,5 +1,7 @@
 # Specs bot
 
+[![GoDoc](https://godoc.org/github.com/babolivier/go-doh-client?status.svg)](https://godoc.org/github.com/babolivier/go-doh-client) [![#discuss:weu.informo.network on Matrix](https://img.shields.io/matrix/discuss:weu.informo.network.svg?logo=matrix)](https://matrix.to/#/#discuss:weu.informo.network)
+
 The specs bot is a Matrix bot that shares state updates of a specifications proposal to the configured Matrix rooms. While initially designed to shout about updates to the [Informo open specs](https://github.com/Informo/specs), we made it compatible to most specifications projects using GitHub issues or pull requests to track proposals and labels to track a proposal's state.
 
 It works by setting up a GitHub webhook listening on pull requests and issues events. Each time it receives a matching payload, and if the event was triggered by a change in the PR/issue's list of labels, it generates an update message by selecting a configured string matching the update and processing it (along with some information specific to the PR/issue) through the configured template. It then sends the message as a [notice](https://matrix.org/docs/spec/client_server/r0.4.0.html#m-notice) to the configured Matrix rooms.
@@ -8,24 +10,17 @@ It works by setting up a GitHub webhook listening on pull requests and issues ev
 
 You can install the bot by building it or using one of the binaries available in the project's [releases](https://github.com/Informo/specs-bot/releases).
 
-This project is written in Go, therefore building it requires a [Go development environment](https://golang.org/doc/install).
+This project is written in Go, therefore building it requires a [Go development environment](https://golang.org/doc/install). It requires Go 1.11+.
 
-Building it also requires [gb](https://github.com/constabulary/gb):
-
-```
-go get github.com/constabulary/gb/...
-```
-
-Once everything is setup correctly, clone this repository, retrieve the project's dependencies and build it:
+In order to build the bot, you should first clone the repository:
 
 ```
 git clone https://github.com/Informo/specs-bot
 cd specs-bot
-gb vendor restore
-gb build
+go build
 ```
 
-The bot's binary should now be available as `bin/specs-bot`. You can run it as it is, or with the `--debug` flag to make it print debug logs, which explain the whole path of a payload's content through the different workflows.
+The bot's binary should now be available as `./specs-bot`. You can run it as it is, or with the `--debug` flag to make it print debug logs, which explain the whole path of a payload's content through the different workflows.
 
 ## Configure
 

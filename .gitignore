@@ -1,7 +1,5 @@
 _test
-bin
-pkg
-vendor/src
 config.yaml
 *.db
 summary
+specs-bot

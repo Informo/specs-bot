@@ -4,10 +4,10 @@ import (
 	"flag"
 	"net/http"
 
-	"config"
-	"database"
-	"hook"
-	"matrix"
+	"github.com/Informo/specs-bot/config"
+	"github.com/Informo/specs-bot/database"
+	"github.com/Informo/specs-bot/hook"
+	"github.com/Informo/specs-bot/matrix"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/go-playground/webhooks.v5/github"

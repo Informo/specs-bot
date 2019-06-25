@@ -3,7 +3,7 @@ package database
 import (
 	"database/sql"
 
-	"config"
+	"github.com/Informo/specs-bot/config"
 
 	// Database drivers
 	_ "github.com/lib/pq"
