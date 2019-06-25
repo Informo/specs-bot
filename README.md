@@ -24,6 +24,12 @@ The bot's binary should now be available as `./specs-bot`. You can run it as it 
 
 ## Configure
 
+### Webhook configuration
+
+The bot currently only support GitHub webhooks and expects them to be send with the `application/json` content type.
+
+### Configuration files
+
 The bot needs two configuration files to do its job.
 
 ### `config.yaml`
