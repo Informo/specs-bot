@@ -85,7 +85,7 @@ Triggers the sending of this notice to Matrix:
 
 ## Scripts
 
-### DB Label Seeder (Sqlite3 only)
+### DB Label Seeder (SQLite only)
 
 This release includes a python3 script called `fill-db.py` in the `scripts/fill-db` directory. Its purpose is to initially seed a database with proposals and their labels. The reason for it is that specs-bot only tracks changes between labels, and thus if a proposal is already halfway through completion when specs-bot is activated, it will end up outputting multiple events as it finds out about all the labels that were already on the issue prior to specs-bot coming online.
 
@@ -104,6 +104,30 @@ python3 scripts/fill-db/fill-db.py
 ```
 
 Your sqlite3 DB file should now be seeded with all proposals and their label information. You can now start specs-bot and be confident it'll show changes as intended.
+
+## Docker
+
+The bot can be run inside a Docker container. The image can be found on the [Docker Hub](https://hub.docker.com/r/informo/specs-bot). It exposes the port 8080, on which the bot is expected to listen.
+
+Building the image from scratch can be done with:
+
+```bash
+docker build -t informo/specs-bot -f docker/Dockerfile .
+```
+
+A configuration file and a strings file are needed. Examples can be found in the [Docker configuration directory](/docker/data).
+
+Once both files are ready, run the image with the configuration file and mount the configuration directory:
+
+```bash
+docker run --name specs-bot -p 8080:8080 -v /path/to/config/directory:/etc/specs-bot specs-bot
+``` 
+
+### Running the DB Label Seeder script (SQLite only)
+
+By running the image with the configuration directory mounted, the bot will initialise a SQLite database in the mounted directory. Therefore, run the image once then kill the container. The SQLite database will have been created in the directory where the configuration lives.
+
+Run the script on that database (by setting `DB_PATH` to the right value), then you can start the bot again, with the same directory mounted as it was during the initial run, and it should start using your updated database.
 
 ## What is Informo?
 

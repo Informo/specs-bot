@@ -1,5 +1,8 @@
 _test
-config.yaml
+.idea
+
+/config.yaml
 *.db
+
 summary
 specs-bot
