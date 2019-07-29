@@ -26,16 +26,23 @@ import (
 func HandlePullRequestPayload(
 	pl github.PullRequestPayload, cli *matrix.Cli, db *database.Database,
 ) (err error) {
-	logrus.WithField("action", pl.Action).Debug("Got PR event payload")
+	logrus.WithFields(logrus.Fields{
+		"action": pl.Action,
+		"number": pl.PullRequest.Number,
+	}).Debug("Got PR event payload")
 
 	// Only process the label-related action.
 	if pl.Action == "labeled" || pl.Action == "unlabeled" {
+		logrus.WithFields(logrus.Fields{
+			"action": pl.Action,
+			"number": pl.PullRequest.Number,
+		}).Debug("Processing PR")
+
 		pr := pl.PullRequest
 
 		// Lock the mutex for this proposal in order to make sure it doesn't get
 		// updated by another event before we're done with this one.
 		mutex.Lock(pr.Number)
-		logrus.WithField("number", pr.Number).Debug("Locked mutex")
 
 		// Retrieve the labels' names.
 		labels := make([]string, 0)
@@ -46,6 +53,11 @@ func HandlePullRequestPayload(
 		err = handleSubmission(pr.Number, pr.Title, pr.HTMLURL, labels, cli, db)
 		return unlockAndReturnErr(pr.Number, err)
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"action": pl.Action,
+		"number": pl.PullRequest.Number,
+	}).Debug("Ignoring PR")
 
 	return nil
 }
@@ -64,16 +76,23 @@ func HandlePullRequestPayload(
 func HandleIssuesPayload(
 	pl github.IssuesPayload, cli *matrix.Cli, db *database.Database,
 ) (err error) {
-	logrus.WithField("action", pl.Action).Debug("Got issue event payload")
+	logrus.WithFields(logrus.Fields{
+		"action": pl.Action,
+		"number": pl.Issue.Number,
+	}).Debug("Got issue event payload")
 
 	// Only process the label-related actions.
 	if pl.Action == "labeled" || pl.Action == "unlabeled" {
+		logrus.WithFields(logrus.Fields{
+			"action": pl.Action,
+			"number": pl.Issue.Number,
+		}).Debug("Processing issue")
+
 		issue := pl.Issue
 
 		// Lock the mutex for this proposal in order to make sure it doesn't get
 		// updated by another event before we're done with this one.
 		mutex.Lock(issue.Number)
-		logrus.WithField("number", issue.Number).Debug("Locked mutex")
 
 		// Retrieve the labels' names.
 		labels := make([]string, 0)
@@ -86,6 +105,11 @@ func HandleIssuesPayload(
 		)
 		return unlockAndReturnErr(issue.Number, err)
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"action": pl.Action,
+		"number": pl.Issue.Number,
+	}).Debug("Ignoring issue")
 
 	return nil
 }
